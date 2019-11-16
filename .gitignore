@@ -25,3 +25,7 @@
 
 build/
 *.swp
+
+# File generated after environment setup
+external/assimp
+external/SDL2/osx/SDL2.framework
