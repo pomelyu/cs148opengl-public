@@ -4,6 +4,23 @@
 #include "common/Utility/Mesh/Loading/MeshLoader.h"
 #include <cmath>
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+std::string StringFromFile(const std::string &fileName)
+{
+    std::ifstream inFile;
+    std::stringstream sstr;
+    inFile.open(fileName, std::ifstream::in);
+    if (!inFile) {
+        std::cerr << "ERROR: Unable to open " << fileName << std::endl;
+    }
+    sstr << inFile.rdbuf();
+    inFile.close();
+    return sstr.str();
+}
+
 namespace
 {
 const int SHADER_ERROR_LOG_SIZE = 500;
@@ -90,12 +107,32 @@ void Assignment2::HandleWindowResize(float x, float y)
 void Assignment2::SetupExample1()
 {
     // Insert "Load and Compile Shaders" code here.
+    const std::string vertShaderFile = std::string(STRINGIFY(SHADER_PATH)) + "/hw2/hw2.vert";
+    const std::string fragShaderFile = std::string(STRINGIFY(SHADER_PATH)) + "/hw2/hw2.frag";
+
+    const char* vertString = StringFromFile(vertShaderFile).c_str();
+    const char* fragString = StringFromFile(fragShaderFile).c_str();
+
+    const GLuint vertObject = glCreateShader(GL_VERTEX_SHADER);
+    const GLuint fragObject = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(vertObject, 1, &vertString, NULL);
+    glShaderSource(fragObject, 1, &fragString, NULL);
+
+    glCompileShader(vertObject);
+    glCompileShader(fragObject);
+
+    programObject = glCreateProgram();
+    glAttachShader(programObject, vertObject);
+    glAttachShader(programObject, fragObject);
+
+    glLinkProgram(programObject);
 
     // Checkpoint 1.
     // Modify this part to contain your vertex shader ID, fragment shader ID, and shader program ID.
-    const GLuint vertexShaderId = 0;
-    const GLuint fragmentShaderId = 0;
-    const GLuint shaderProgramId = 0;
+    const GLuint vertexShaderId = vertObject;
+    const GLuint fragmentShaderId = fragObject;
+    const GLuint shaderProgramId = programObject;
 
     // DO NOT EDIT OR REMOVE THE CODE IN THIS SECTION
     if (!VerifyShaderCompile(vertexShaderId) || !VerifyShaderCompile(fragmentShaderId) || !VerifyProgramLink(shaderProgramId)) {
