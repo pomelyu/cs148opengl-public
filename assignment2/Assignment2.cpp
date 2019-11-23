@@ -8,17 +8,30 @@
 #include <fstream>
 #include <sstream>
 
-std::string StringFromFile(const std::string &fileName)
+const GLuint shaderFromFile(const std::string &fileName, GLenum shaderType)
 {
     std::ifstream inFile;
     std::stringstream sstr;
     inFile.open(fileName, std::ifstream::in);
-    if (!inFile) {
+    if (!inFile.is_open()) {
         std::cerr << "ERROR: Unable to open " << fileName << std::endl;
     }
     sstr << inFile.rdbuf();
     inFile.close();
-    return sstr.str();
+
+    // 因為 sstr 是 buffer，因此 sstr.str() 回傳指向 buffer 的 copy
+    // sstr.str().c_str()，最後回傳指向 buffer 的 pointer，
+    // 因此在函式呼叫結束後後資料可能會被清掉
+    // 也就是說用 sstr.str().c_str() 可能會讀取到隨機的資料，
+    // 導致後續 opengl compile 上出現隨機的錯誤
+    // 因此這邊需要把 shader 的檔案讀取和 compile 放在同一個函數進行
+    // 參考：https://stackoverflow.com/questions/11138705/is-there-anything-wrong-with-my-glsl-shader-loading-code
+    const char* shaderString = sstr.str().c_str();
+    const GLuint shaderObject = glCreateShader(shaderType);
+    glShaderSource(shaderObject, 1, &shaderString, NULL);
+    glCompileShader(shaderObject);
+
+    return shaderObject;
 }
 
 namespace
@@ -110,17 +123,8 @@ void Assignment2::SetupExample1()
     const std::string vertShaderFile = std::string(STRINGIFY(SHADER_PATH)) + "/hw2/hw2.vert";
     const std::string fragShaderFile = std::string(STRINGIFY(SHADER_PATH)) + "/hw2/hw2.frag";
 
-    const char* vertString = StringFromFile(vertShaderFile).c_str();
-    const char* fragString = StringFromFile(fragShaderFile).c_str();
-
-    const GLuint vertObject = glCreateShader(GL_VERTEX_SHADER);
-    const GLuint fragObject = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(vertObject, 1, &vertString, NULL);
-    glShaderSource(fragObject, 1, &fragString, NULL);
-
-    glCompileShader(vertObject);
-    glCompileShader(fragObject);
+    const GLuint vertObject = shaderFromFile(vertShaderFile, GL_VERTEX_SHADER);
+    const GLuint fragObject = shaderFromFile(fragShaderFile, GL_FRAGMENT_SHADER);
 
     programObject = glCreateProgram();
     glAttachShader(programObject, vertObject);
