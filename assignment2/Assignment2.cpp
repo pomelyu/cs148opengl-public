@@ -10,23 +10,25 @@
 
 const GLuint shaderFromFile(const std::string &fileName, GLenum shaderType)
 {
-    std::ifstream inFile;
-    std::stringstream sstr;
-    inFile.open(fileName, std::ifstream::in);
-    if (!inFile.is_open()) {
-        std::cerr << "ERROR: Unable to open " << fileName << std::endl;
-    }
-    sstr << inFile.rdbuf();
-    inFile.close();
+    std::ifstream fs(fileName, std::ifstream::in);
 
-    // 因為 sstr 是 buffer，因此 sstr.str() 回傳指向 buffer 的 copy
-    // sstr.str().c_str()，最後回傳指向 buffer 的 pointer，
-    // 因此在函式呼叫結束後後資料可能會被清掉
-    // 也就是說用 sstr.str().c_str() 可能會讀取到隨機的資料，
+    if (!fs.is_open()) {
+        std::cerr << "ERROR: Could not read shader from " << fileName << std::endl;
+        return 0;
+    }
+    
+    // This reads in the whole file into an std::string. Google for more information!
+    std::string shaderText((std::istreambuf_iterator<char>(fs)),
+                            std::istreambuf_iterator<char>());
+
+    // 因為 shaderText 指向 buffer 的 copy
+    // 而 shaderText.c_str()，最後回傳指向 buffer 的 pointer，
+    // 因此在函式呼叫結束後資料可能會被清掉
+    // 也就是說如果在函式外呼叫 shaderText.c_str() 可能會讀取到隨機的資料，
     // 導致後續 opengl compile 上出現隨機的錯誤
     // 因此這邊需要把 shader 的檔案讀取和 compile 放在同一個函數進行
     // 參考：https://stackoverflow.com/questions/11138705/is-there-anything-wrong-with-my-glsl-shader-loading-code
-    const char* shaderString = sstr.str().c_str();
+    const char* shaderString = shaderText.c_str();
     const GLuint shaderObject = glCreateShader(shaderType);
     glShaderSource(shaderObject, 1, &shaderString, NULL);
     glCompileShader(shaderObject);
