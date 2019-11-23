@@ -134,6 +134,8 @@ void Assignment2::SetupExample1()
 
     glLinkProgram(programObject);
 
+    glTime = glGetUniformLocation(programObject, "inputTime");
+    
     // Checkpoint 1.
     // Modify this part to contain your vertex shader ID, fragment shader ID, and shader program ID.
     const GLuint vertexShaderId = vertObject;
@@ -172,4 +174,7 @@ void Assignment2::Tick(double deltaTime)
     glUseProgram(programObject);
     glBindVertexArray(vertexArray);
     glDrawArrays(GL_TRIANGLES, 0, vertexPositions.size());
+    
+    time += 1;
+    glUniform1f(glTime, time);
 }

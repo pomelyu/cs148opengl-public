@@ -20,6 +20,8 @@ public:
 
     GLuint programObject = 0;
     GLuint vertexArray = 0;
+    GLuint glTime = 0;
+    float time = 0;
     
 protected:
     virtual void HandleWindowResize(float x, float y);
