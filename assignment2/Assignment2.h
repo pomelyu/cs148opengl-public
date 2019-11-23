@@ -19,6 +19,7 @@ public:
     virtual void Tick(double deltaTime);
 
     GLuint programObject = 0;
+    GLuint vertexArray = 0;
     
 protected:
     virtual void HandleWindowResize(float x, float y);
