@@ -19,7 +19,7 @@ public:
     virtual void Tick(double deltaTime);
 
     GLuint programObject = 0;
-    GLuint vertexArray = 0;
+    GLuint vao = 0;
     GLuint glTime = 0;
     float time = 0;
     

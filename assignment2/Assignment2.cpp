@@ -156,12 +156,14 @@ void Assignment2::SetupExample1()
     // FINISH DO NOT EDIT OR REMOVE THE CODE IN THIS SECTION
 
     // Insert "Setup Buffers" code here.
-    glGenVertexArrays(1, &vertexArray);
-    glBindVertexArray(vertexArray);
+    // vao (vertex array object)
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
-    GLuint buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    // vbo (vertex buffer object)
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * vertexPositions.size(), &vertexPositions[0], GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
@@ -172,7 +174,7 @@ void Assignment2::Tick(double deltaTime)
 {
     // Insert "Send Buffers to the GPU" and "Slightly-More Advanced Shaders" code here.
     glUseProgram(programObject);
-    glBindVertexArray(vertexArray);
+    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, vertexPositions.size());
     
     time += 1;
