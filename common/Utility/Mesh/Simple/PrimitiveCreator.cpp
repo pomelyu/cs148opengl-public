@@ -56,6 +56,7 @@ std::shared_ptr<RenderingObject> CreateIcoSphere(std::shared_ptr<ShaderProgram> 
     std::unique_ptr<RenderingObject::PositionArray> vertexPositions = make_unique<RenderingObject::PositionArray>();
     // An Icohedron's vertices can be placed onto three orthogonal rectangles (check the links for pictures!)
     // Note that the icosahedron code is based off of the implementation by Andreas Kahler.
+    // 這樣算出來的正二十面體中心位在座標原點
     vertexPositions->emplace_back(-1.f, gr, 0.f, 1.f);
     vertexPositions->emplace_back(1.f, gr, 0.f, 1.f);
     vertexPositions->emplace_back(-1.f, -gr, 0.f, 1.f);
@@ -73,6 +74,8 @@ std::shared_ptr<RenderingObject> CreateIcoSphere(std::shared_ptr<ShaderProgram> 
 
     // Force every vertex to be on the sphere of radius 'radius'
     std::for_each(vertexPositions->begin(), vertexPositions->end(),
+        // c++ 的 lambda function, [=] 代表 function 中用到的外部變數（radius）是用 pass-by-value 的方式使用，
+        // 如果 [&] 就代表是用 pass-by-reference 的方式使用
         [=](decltype(*vertexPositions->begin())& position) {
             position = glm::vec4(glm::normalize(glm::vec3(position)) * radius, 1.f);
         }
@@ -112,6 +115,7 @@ std::shared_ptr<RenderingObject> CreateIcoSphere(std::shared_ptr<ShaderProgram> 
         newVertexIndices.reserve(totalTriangles * 4);
         for (decltype(totalTriangles) t = 0; t < totalTriangles; ++t) {
             const int triangleOffset = t * 3;
+            // 由三角形的兩個頂點求出中點，再將中點沿著球心方向移動到球面上
             const glm::vec4 midpointA = glm::vec4(glm::normalize(glm::vec3(vertexPositions->at(vertexIndices[triangleOffset]) + vertexPositions->at(vertexIndices[triangleOffset  + 1])) / 2.f) * radius, 1.f);
             const glm::vec4 midpointB = glm::vec4(glm::normalize(glm::vec3(vertexPositions->at(vertexIndices[triangleOffset + 1]) + vertexPositions->at(vertexIndices[triangleOffset  + 2])) / 2.f) * radius, 1.f);
             const glm::vec4 midpointC = glm::vec4(glm::normalize(glm::vec3(vertexPositions->at(vertexIndices[triangleOffset + 2]) + vertexPositions->at(vertexIndices[triangleOffset])) / 2.f) * radius, 1.f);
@@ -119,7 +123,8 @@ std::shared_ptr<RenderingObject> CreateIcoSphere(std::shared_ptr<ShaderProgram> 
             unsigned int aIndex = static_cast<unsigned int>(vertexPositions->size());
             unsigned int bIndex = static_cast<unsigned int>(vertexPositions->size() + 1);
             unsigned int cIndex = static_cast<unsigned int>(vertexPositions->size() + 2);
-
+            
+            // 假如新的頂點和舊的頂點太接近，就忽略它，否則加到 vertexPositions
             // NOTE: Slow. VERY SLOW. O(n^2) SLOW. :((
             // TODO: Use a KD-Tree to speed this up.
             for (decltype(vertexPositions->size()) j = 0; j < vertexPositions->size(); ++j) {
@@ -150,7 +155,8 @@ std::shared_ptr<RenderingObject> CreateIcoSphere(std::shared_ptr<ShaderProgram> 
                 vertexPositions->push_back(midpointC);
                 cIndex = vertexPositions->size() - 1;
             }
-
+            
+            // 將原先的三角形切成四個後放入 newVertexIndices
             AddTriangleIndices(glm::uvec3(vertexIndices[triangleOffset], aIndex, cIndex), newVertexIndices);
             AddTriangleIndices(glm::uvec3(vertexIndices[triangleOffset + 1], bIndex, aIndex), newVertexIndices);
             AddTriangleIndices(glm::uvec3(vertexIndices[triangleOffset + 2], cIndex, bIndex), newVertexIndices);

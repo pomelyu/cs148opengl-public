@@ -117,6 +117,8 @@ void Assignment3::SetupExample1()
         { GL_FRAGMENT_SHADER, "brdf/blinnphong/frag/noSubroutine/blinnphong.frag"}
     };
 #endif
+    // std::shared_ptr 是 c++11 引入的，它會自動計算有多少個變數共用這個 pointer，
+    // 當沒有任何變數使用這個 pointer 時會自動釋放記憶體
     std::shared_ptr<BlinnPhongShader> shader = std::make_shared<BlinnPhongShader>(shaderSpec, GL_FRAGMENT_SHADER);
     shader->SetDiffuse(glm::vec4(0.8f, 0.8f, 0.8f, 1.f));
     shader->SetAmbient(glm::vec4(0.5f));
@@ -126,14 +128,21 @@ void Assignment3::SetupExample1()
     // Give a R/G/B color to each vertex to visualize the sphere.
     auto totalVertices = sphereTemplate->GetTotalVertices();
 
+    // std::unique_ptr 代表這個 pointer 無法被多個變數共用（也不能複製）
+    // 也就是說連直接當作函數的引數也無法（因為這也是複製 pointer）
+    // 只能透過 std::move 這個函數更改擁有權
     std::unique_ptr<RenderingObject::ColorArray> vertexColors = make_unique<RenderingObject::ColorArray>();
     vertexColors->reserve(totalVertices);
 
     for (decltype(totalVertices) i = 0; i < totalVertices; ++i) {
+        // vector::emplace_back() 作用結果和 push_back 結果相同
+        // emplace_back，直接調用 constructor 建立物件並加到 vector 中（所以 emplace_back 傳入的是 constructor 的引數）
+        // push_back，利用 copy constructor 把已建立好的物件加到 vector 中（所以 push_back 傳入的是物件）
         vertexColors->emplace_back(0.5f, 0.5f, 0.5f, 1.f);
     }
     sphereTemplate->SetVertexColors(std::move(vertexColors));
 
+    // std::make_shared 就是將 unique_ptr 轉成 shared_ptr
     sceneObject = std::make_shared<SceneObject>(sphereTemplate);
     scene->AddSceneObject(sceneObject);
 
